@@ -1,0 +1,6 @@
+python-binance
+openpyxl
+binance
+backtrader
+matplotlib==3.2.2
+nsepy
