@@ -53,13 +53,13 @@ def init():
 
 
         #Logic to update GTT price
-        update_gtt_order = 'N'
+        update_gtt_order = ''
         gtt_order_price = sh2.cell(i + 1, 6).value
         if gtt_order_price is not None and gtt_order_price != high_20_day:
             update_gtt_order = 'Y'
         else:
             update_gtt_order = ''
-
+        sh2.cell(i + 1, 8).value = update_gtt_order
     #Saving the workbook
     wb.save('sst.xlsx')
 def main():
