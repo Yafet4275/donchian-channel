@@ -6,6 +6,10 @@ from binance.client import Client
 from datetime import datetime
 from openpyxl.styles import PatternFill
 from openpyxl.styles.colors import *
+import pandas as pd
+#Option to display all rows
+pd.set_option('display.max_rows',None)
+pd.set_option('display.max_columns',None)
 
 def init():
     new_symbols_for_tracking = []
@@ -33,37 +37,42 @@ def init():
         #Passing the symbol to get the last 20 day data which is a list of list
         candles = helper.get_historic_data_by_symbol_days(client,sym,20)
 
-        # Iterating the list of list
-        for candle in candles:
-            #Converting the raw timestamp to date time , NOTE - timestamp is coming in miliseconds hence divided by 1000
-            candle[0] = datetime.fromtimestamp(candle[0] / 1000).strftime('%d-%m-%y')
 
-        # Below will return the row which represents last 20 day low record
-        lowest_row = min(candles, key=lambda x: x[3])
+        df = pd.DataFrame(candles)
+        df[0] = pd.to_datetime(df[0], unit='ms')
 
-        #Fethcing the low
-        low_20_day = lowest_row[3]
+        print(f'At Row {i + 1} For symbol {sym} candle is {candles}')
+        # Below will add the row which represents last 20 day low record and the date
+        #Behavior could be achived without rolling as well
+        df['low_20'] =df[3].rolling(20).min()
+        df['low_3'] =df[3].rolling(3).min()
 
+        # Below will add the row which represents last 20 day High record and the date
+        df['high_20_day'] =df[2].rolling(20).max()
+
+        #Fethcing the last row
+        last_row = df.iloc[-1:]
+        low_20_day = float(last_row['low_20'])
+        for current in range(0, len(df.index)):
+            if float(df[3][current]) == low_20_day:
+                print(f'{low_20_day} and {df[3][current]}')
+                df['low_20_day_date'] =df[0][current]
+                break
+        last_row = df.iloc[-1:]
         #fethcing the low date
-        low_20_day_date = lowest_row[0]
-
-        #Below will return last 20 day high record
-        highest_row = max(candles, key=lambda x: x[2])
+        low_20_day_date = str(last_row['low_20_day_date'].to_string())
 
         #fetching the high
-        high_20_day = highest_row[2]
+        high_20_day = float(last_row['high_20_day'])
 
-        # fethcing the high date
-        high_20_day_date = lowest_row[0]
-
-        sh1.cell(i + 1, 3).value = low_20_day
-        sh1.cell(i + 1, 4).value = low_20_day_date
+        sh1.cell(i + 1, 3).value = float(low_20_day)
+        sh1.cell(i + 1, 4).value = str(low_20_day_date)
 
         #TODO Code to get last 20 day high from today and last 20 day high from t-1 day
         if sh1.cell(i + 1, 5).value is None :
-            sh1.cell(i + 1, 5).value = high_20_day
+            sh1.cell(i + 1, 5).value = float(high_20_day)
         else:
-            sh1.cell(i + 1, 6).value = high_20_day
+            sh1.cell(i + 1, 6).value = float(high_20_day)
 
         # Below will query and fetch the lastest spot price of the symbol
         spot = list(filter(lambda x: x.get('symbol') == sym, client.get_all_tickers()))
@@ -71,11 +80,8 @@ def init():
         #storing the spot price in excel
         sh1.cell(i + 1, 2).value = spot[0].get('price')
 
-        #Passing the symbol to get the last 3 day data which is a list of list
-        candles_3_day_low = helper.get_historic_data_by_symbol_days(client,sym,3)
-        lowest_from_3_day_row = min(candles_3_day_low, key=lambda x: x[3])
-        lowest_from_3_day = lowest_from_3_day_row[3]
-        sh1.cell(i + 1, 8).value = lowest_from_3_day
+        lowest_from_3_day = float(last_row['low_3'])
+        sh1.cell(i + 1, 8).value = float(lowest_from_3_day)
 
         #Missed the opportunity in last 3 days
         if lowest_from_3_day == low_20_day:
@@ -89,8 +95,9 @@ def init():
         #Adding a blue color background if the difference between the trigger price and current price is less thn 5
         if int(away_per) <= 15:
             sh1.cell(i + 1, 7).fill =PatternFill(start_color="d1d2ef", end_color="d1d2ef", fill_type="solid")
+        else:
+            sh1.cell(i + 1, 7).fill =PatternFill(fill_type=None)
 
-        #
 
     #Add these new symbols in Tracking sheet if already not present
     # Loading the Tracking sheet from Workbook

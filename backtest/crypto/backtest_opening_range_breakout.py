@@ -30,9 +30,9 @@ class TestSSTStrategy(bt.Strategy):
             #If previous order exists then start tracking iff the current price is less then 15% of average buying price
             if len(self.buy_orders) > 0:
                 #self.log('Previous order exists and current avg buy price is %.2f' % self.buy_avg)
-                #Start New tracking iff iff the current price is less then 15% of average buying price
+                #Start New tracking iff iff the current price is less then 30% of average buying price
                 per_dif = (self.buy_avg - (self.datahigh[0] + self.datalow[0])/2)/self.buy_avg * 100
-                if per_dif >=30:
+                if per_dif >=50:
                     self.log('Started Tracking the coin as it previous buying avg is less than 15 per %.2f' % self.datalow[0])
 
                     # Update the GTT price as 20 DH

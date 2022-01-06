@@ -2,12 +2,17 @@ from binance import Client
 from binance.enums import *
 
 import config
+import ccxt
+
+exchange = ccxt.binance();
+
 
 def get_historic_data_by_symbol_days(client,sym,days):
     return client.get_historical_klines(sym, Client.KLINE_INTERVAL_1DAY, f'{days} day ago UTC')
 
 def get_historic_data_by_start_and_end_date(client,sym,interval,start_date,end_date):
     return client.get_historical_klines(sym, interval, start_date, end_date)
+
 
 # API for doing money management
 def get_quantity_of_stock_for_buy(buy_price_usdt):
@@ -16,6 +21,7 @@ def get_quantity_of_stock_for_buy(buy_price_usdt):
     money_available_per_trade = total_money_for_trade/total_coin_of_interest
     #quantity = round(money_available_per_trade/buy_price_usdt, 5)
     print(money_available_per_trade/buy_price_usdt)
+    #quantity = format_num_filter(money_available_per_trade/buy_price_usdt)
     quantity = format_num_filter(money_available_per_trade/buy_price_usdt)
     print(f' Quantity for this trade is {quantity}')
     return quantity
@@ -48,16 +54,16 @@ def buy(client,sym,stopprice):
         print(f'Order exists for {sym} going to cancel the previous order')
         cancel(client, sym)
     #TODO Add a wait of 2 secs
-    quantity_of_stocks_to_buy = format_num_filter(get_quantity_of_stock_for_buy(stop_price *1.01))
+    quantity_of_stocks_to_buy = format_num_filter(get_quantity_of_stock_for_buy(stop_price *1.005))
     #price = round((stop_price *1.01),1) #Placing order 1 % above the GTT price
-    price = stop_price + format_num_filter((stop_price *0.01))  #Placing order 1 % above the GTT price
+    price = format_num_filter(stop_price + (stop_price *0.01))  #Placing order 1 % above the GTT price
     order = client.create_order(symbol=sym,
                                 side=SIDE_BUY,
                                 type = ORDER_TYPE_STOP_LOSS_LIMIT,
                                 timeInForce= TIME_IN_FORCE_GTC,
-                                quantity=quantity_of_stocks_to_buy,
-                                price=price,
-                                stopPrice = stop_price
+                                quantity=format_num_filter(quantity_of_stocks_to_buy),
+                                price= format_num_filter(price),
+                                stopPrice =  format_num_filter(stop_price)
                                 )
 
     client.create_order

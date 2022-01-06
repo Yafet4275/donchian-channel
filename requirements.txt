@@ -4,3 +4,4 @@ binance
 backtrader
 matplotlib==3.2.2
 nsepy
+ccxt

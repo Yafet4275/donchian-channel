@@ -1,6 +1,8 @@
 import openpyxl
 from openpyxl.styles import PatternFill
 
+import pandas as pd
+
 import helper
 from binance.client import Client
 
@@ -33,23 +35,27 @@ def init():
 
         #Passing the symbol to get the last 20 day data which is a list of list
         candles = helper.get_historic_data_by_symbol_days(client,sym,20)
+        print(f'At Row {i + 1} For symbol {sym} candle is {candles}')
+        df = pd.DataFrame(candles)
+        df[0] = pd.to_datetime(df[0], unit='ms')
 
         #Below will return last 20 day high record
-        highest_row = max(candles, key=lambda x: x[2])
+        #highest_row = max(candles, key=lambda x: x[2])
 
         #fetching the high
-        high_20_day = highest_row[2]
-
+        df['high_20_day'] = df[2].rolling(20).max()
+        last_row = df.iloc[-1:]
+        high_20_day = float(last_row['high_20_day'])
         sh2.cell(i + 1, 3).value = high_20_day
 
         diff_20DH_CMP = ((float(high_20_day) - float(spot_price))/float(spot_price) ) * 100
 
         sh2.cell(i + 1, 4).value = int(diff_20DH_CMP)
         #Adding a blue color background if the difference between the trigger price and current price is less thn 5
-        if 0<= int(diff_20DH_CMP) <= 5:
+        if 0<= int(diff_20DH_CMP) <= 15:
             sh2.cell(i + 1, 4).fill =PatternFill(start_color="d1d2ef", end_color="d1d2ef", fill_type="solid")
         else:
-            pass #TODO
+            sh2.cell(i + 1, 4).fill = PatternFill(fill_type=None)
 
 
         #Logic to update GTT price
