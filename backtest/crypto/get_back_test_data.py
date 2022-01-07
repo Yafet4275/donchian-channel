@@ -9,7 +9,7 @@ import helper
 
 client = Client(config.API_KEY, config.API_SECRET)
 
-sym='EOSUSDT'
+sym='BTCUSDT'
 interval = Client.KLINE_INTERVAL_1DAY
 start_date= "1 Jan, 2011"
 current_time = datetime.datetime.now()

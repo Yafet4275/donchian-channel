@@ -11,6 +11,7 @@ class TestSSTStrategy(bt.Strategy):
     def __init__(self):
         self.the_highest_high_20 = bt.ind.Highest(self.data.high, period=20)
         self.the_lowest_low_20 = bt.ind.Lowest(self.data.low, period=20)
+        self.the_ema_50 = bt.ind.ExponentialMovingAverage(self.data.close, period=50)
         self.datalow = self.datas[0].low # Resolved from issue solution -https://community.backtrader.com/topic/2411/trying-to-use-binance-data/2
         self.datahigh = self.datas[0].high
 
@@ -38,17 +39,23 @@ class TestSSTStrategy(bt.Strategy):
                     # Update the GTT price as 20 DH
                     self.gtt_price = self.the_highest_high_20
                     self.started_tracking = True
+                    #self.log('The 50 period EMA is  %.2f' % self.the_ema_50)
             else:
                 self.log('Start Tracking the coin, %.2f' % self.datalow[0])
                 #Update the GTT price as 20 DH
                 self.gtt_price = self.the_highest_high_20
                 self.started_tracking = True
+                #self.log('The 50 period EMA is  %.2f' % self.the_ema_50)
 
 
         #Place a buy order if todays high is greater than gtt_price and if the position is being tracked in Tracking sheet
-        if self.started_tracking and self.datahigh[0] >=self.gtt_price and self.gtt_price != 0.0:
+        ema_in_uptrend = (self.the_ema_50[0] >self.the_ema_50[-1])
+        if self.started_tracking and self.datahigh[0] >=self.gtt_price and self.gtt_price != 0.0 and ema_in_uptrend :
             self.buy_price = self.gtt_price + self.gtt_price* 0.01
             self.log('New Buy Created, %.2f' % self.buy_price)
+            self.log('EMA is , %.2f' % self.the_ema_50[0])
+            self.log('EMA is , %.2f' % self.the_ema_50[-1])
+            self.log('EMA in uptrend , ' + str(ema_in_uptrend))
             #self.target_price = self.buy_price + self.buy_price*self.take_profit
             self.buy(size=1)
 
@@ -75,6 +82,7 @@ class TestSSTStrategy(bt.Strategy):
 
 
         #Condition for sell
+        ema_in_downtrend = (self.the_ema_50[0] < self.the_ema_50[-1])
         if self.position:
             target_per = 0
             #Calculating dynamic target :
@@ -88,7 +96,8 @@ class TestSSTStrategy(bt.Strategy):
                 target_per = 10
             self.target_price = self.buy_avg + (self.buy_avg *target_per)/100
 
-            if self.datahigh[0] >=self.target_price and self.target_price > 0.0 :
+            #if self.datahigh[0] >=self.target_price and self.target_price > 0.0 :
+            if self.datahigh[0] >=self.target_price and self.target_price > 0.0 and ema_in_downtrend:
                 self.log('Average buying price for this order is, %.2f' % self.buy_avg)
                 self.log('Target percentsge  for this sell is, %.2f' % target_per)
                 self.log('Target price  for this sell is, %.2f' % self.target_price)
