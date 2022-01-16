@@ -1,5 +1,6 @@
 import openpyxl
 from openpyxl.styles import PatternFill
+from config import *
 
 import pandas as pd
 
@@ -15,10 +16,10 @@ def init():
     client = Client(config.API_KEY, config.API_SECRET)
 
     # Loading the workbook for SST
-    wb = openpyxl.load_workbook('sst.xlsx')
+    wb = openpyxl.load_workbook(WORKBOOK_FOR_SST)
 
     # Loading the Tracking sheet from Workbook
-    sh2 = wb['Tracking']
+    sh2 = wb[WORKBOOK_TRACKING_SHEET]
 
     #storing the total number of row count in row variable
     row = sh2.max_row
@@ -67,7 +68,7 @@ def init():
             update_gtt_order = ''
         sh2.cell(i + 1, 8).value = update_gtt_order
     #Saving the workbook
-    wb.save('sst.xlsx')
+    wb.save(WORKBOOK_FOR_SST)
 def main():
     init()
 

@@ -1,5 +1,6 @@
 from binance import Client
 from binance.enums import *
+from decimal import *
 
 import config
 import ccxt
@@ -21,7 +22,6 @@ def get_quantity_of_stock_for_buy(buy_price_usdt):
     money_available_per_trade = total_money_for_trade/total_coin_of_interest
     #quantity = round(money_available_per_trade/buy_price_usdt, 5)
     print(money_available_per_trade/buy_price_usdt)
-    #quantity = format_num_filter(money_available_per_trade/buy_price_usdt)
     quantity = format_num_filter(money_available_per_trade/buy_price_usdt)
     print(f' Quantity for this trade is {quantity}')
     return quantity
@@ -49,21 +49,29 @@ def format_num_filter(number):
 # API to place GTT buy orders
 def buy(client,sym,stopprice):
     #stop_price = round(float(stopprice),2)
-    stop_price = format_num_filter(float(stopprice))
+    exchange = get_exchange()
+    print(exchange.fetch_balance())
+    #stop_price = format_num_filter(float(stopprice))
+    coin_symbol = sym.split('USDT')[0]+"/USDT"
+    stop_price = exchange.price_to_precision(coin_symbol,stopprice)
     if check_if_order_does_not_exists(client,sym) is False :
         print(f'Order exists for {sym} going to cancel the previous order')
         cancel(client, sym)
     #TODO Add a wait of 2 secs
-    quantity_of_stocks_to_buy = format_num_filter(get_quantity_of_stock_for_buy(stop_price *1.005))
+    #quantity_of_stocks_to_buy = format_num_filter(get_quantity_of_stock_for_buy(stop_price *1.005))
+    quantity_of_stocks_to_buy = exchange.amount_to_precision(coin_symbol,get_quantity_of_stock_for_buy(float(stop_price) *1.005))
     #price = round((stop_price *1.01),1) #Placing order 1 % above the GTT price
-    price = format_num_filter(stop_price + (stop_price *0.01))  #Placing order 1 % above the GTT price
+    #price = format_num_filter(stop_price + (stop_price *0.01))  #Placing order 1 % above the GTT price
+    #price = stop_price +  format_num_filter((stop_price *0.01))
+    price = float(stop_price) +  float(exchange.price_to_precision(coin_symbol,(float(stop_price) *0.01)))
+    #print(Decimal(price))#Placing order 1 % above the GTT price
     order = client.create_order(symbol=sym,
                                 side=SIDE_BUY,
                                 type = ORDER_TYPE_STOP_LOSS_LIMIT,
                                 timeInForce= TIME_IN_FORCE_GTC,
-                                quantity=format_num_filter(quantity_of_stocks_to_buy),
-                                price= format_num_filter(price),
-                                stopPrice =  format_num_filter(stop_price)
+                                quantity=exchange.amount_to_precision(coin_symbol,quantity_of_stocks_to_buy),
+                                price= exchange.price_to_precision(coin_symbol,price),
+                                stopPrice =  stop_price
                                 )
 
     client.create_order
@@ -86,3 +94,17 @@ def check_if_order_does_not_exists(client,sym):
     else :
         print(f' Pending order doesnot exists for {sym}')
         return True
+
+#API to initialize the exchange
+exchange = None
+def get_exchange():
+    # defining the exchange from where we want the data , we are connecting to binance
+    # Note : We are not in binanceus
+    global exchange
+    if exchange is None:
+        exchange = ccxt.binance({
+            'apiKey': config.API_KEY,
+            'secret': config.API_SECRET
+        })
+    # print(f'Balance {exchange.fetch_balance()}')
+    return exchange

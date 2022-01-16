@@ -1,6 +1,7 @@
 import openpyxl
 from binance import Client
 from binance.enums import *
+from config import *
 
 import config
 import helper
@@ -17,10 +18,10 @@ def init():
 
 
     # Loading the workbook for SST
-    wb = openpyxl.load_workbook('sst.xlsx')
+    wb = openpyxl.load_workbook(WORKBOOK_FOR_SST)
 
     # Loading the Tracking sheet from Workbook
-    sh2 = wb['Tracking']
+    sh2 = wb[WORKBOOK_TRACKING_SHEET]
 
     #storing the total number of row count in row variable
     row = sh2.max_row
@@ -53,7 +54,7 @@ def init():
                     print(f'An order already exists for {sym}')
 
     #Saving the workbook
-    wb.save('sst.xlsx')
+    wb.save(WORKBOOK_FOR_SST)
 
 def main():
     init()

@@ -2,6 +2,7 @@ import helper
 import config
 import openpyxl
 
+from config import *
 from binance.client import Client
 from datetime import datetime
 from openpyxl.styles import PatternFill
@@ -17,10 +18,10 @@ def init():
     client = Client(config.API_KEY, config.API_SECRET)
 
     # Loading the workbook for SST
-    wb = openpyxl.load_workbook('sst.xlsx')
+    wb = openpyxl.load_workbook(WORKBOOK_FOR_SST)
 
     # Loading the Main sheet from Workbook
-    sh1 = wb['Main']
+    sh1 = wb[WORKBOOK_MAIN_SHEET]
 
     #storing the total number of row count in row variable
     row = sh1.max_row
@@ -101,7 +102,7 @@ def init():
 
     #Add these new symbols in Tracking sheet if already not present
     # Loading the Tracking sheet from Workbook
-    sh2 = wb['Tracking']
+    sh2 = wb[WORKBOOK_TRACKING_SHEET]
     #storing the total number of row count in row variable
     row = sh2.max_row
 
@@ -119,7 +120,7 @@ def init():
 
 
     #Saving the final workbook
-    wb.save('sst.xlsx')
+    wb.save(WORKBOOK_FOR_SST)
 def main():
     init()
 
