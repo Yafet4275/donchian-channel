@@ -1,3 +1,4 @@
+import openpyxl
 from binance import Client
 from binance.enums import *
 from decimal import *
@@ -108,3 +109,61 @@ def get_exchange():
         })
     # print(f'Balance {exchange.fetch_balance()}')
     return exchange
+
+# Check in_position for symbol
+def check_in_position(coin_symbol, exchange):
+    coin = str(coin_symbol).split('USDT')
+    balances = exchange.fetch_balance()
+    assets = balances.get("info").get("balances")
+    #last_row_index = len(df.index) - 1
+    for asset in assets:
+        if asset.get('asset') == coin[0]:
+            free = float(asset['free'])
+            locked = float(asset['locked'])
+            print(f'Free Balacne is {free} and locked is {locked}')
+            # Fetching the latest price of coin_symbol(ETH/USDT)
+            price = float(exchange.fetchTicker(coin_symbol).get('last'))
+            current_position_size = price * (free + locked)
+            if current_position_size > 10:
+                print(
+                    f'You are already in position for {coin_symbol} , free balance {free} and estimated position size {current_position_size}')
+                return True
+    return False
+
+#Symbols We are tracking
+sym_all_from_main=set()
+def fetch_all_symbols_from_main():
+    wb = openpyxl.load_workbook('sst_1.xlsx')
+    sh1 = wb['Main']
+    row = sh1.max_row
+    for i in range(1, row):
+        sym_all_from_main.add(sh1.cell(i + 1, 1).value)
+    print(sym_all_from_main)
+
+#List is in USDT pair . eg: BTCUSDT
+sym_where_we_have_position=set()
+def fetch_all_sym_where_we_have_positions(exchange):
+    balances = exchange.fetch_balance()
+    assets = balances.get("info").get("balances")
+    for asset in assets:
+        free = float(asset['free'])
+        locked = float(asset['locked'])
+        print(f'Free Balacne is {free} and locked is {locked}')
+        # Fetching the latest price of coin_symbol(ETH/USDT)
+        coin_symbol=str(asset['asset'])+'USDT'
+        if coin_symbol in sym_all_from_main:
+            price = float(exchange.fetchTicker(coin_symbol).get('last'))
+            current_position_size = price * (free + locked)
+            if current_position_size > 10:
+                sym_where_we_have_position.add(coin_symbol)
+                print(
+                    f'You are already in position for {coin_symbol} , '
+                    f'free balance {free} and estimated position size {current_position_size}')
+
+    print(sym_where_we_have_position)
+
+
+def check_in_position_v2(coin_symbol):
+    if coin_symbol in sym_where_we_have_position:
+        return True
+    return False

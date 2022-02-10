@@ -111,8 +111,15 @@ def init():
     for i in range(1, row):
         previous_sym_already_tracked.append(sh2.cell(i + 1, 1).value)
 
+    #Iterating all the rows where position is already taken and the next averaage will be done at 40% loss
+    position_already_taken = []
+    sh3 = wb[WORKBOOK_INVESTMENT_SHEET]
+    #storing the total number of row count in row variable
+    row3 = sh3.max_row
+    for i in range(1, row):
+        position_already_taken.append(sh3.cell(i + 1, 1).value)
     #Apending new symbols in tracking sheet
-    sym_not_in_tracking_sheet = set(new_symbols_for_tracking) - set(previous_sym_already_tracked)
+    sym_not_in_tracking_sheet = set(new_symbols_for_tracking) - set(previous_sym_already_tracked)- set(position_already_taken)
     if len(sym_not_in_tracking_sheet) > 0 :
         sym_not_in_tracking_sheet_list = list(sym_not_in_tracking_sheet)
         for i in range(0,len(sym_not_in_tracking_sheet_list)):

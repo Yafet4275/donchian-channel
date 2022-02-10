@@ -33,7 +33,7 @@ def init():
         away_per = sh2.cell(i + 1, 4).value
 
         #First condition for Buy is Away % should be between 0 to 5
-        if 0<= away_per <= 15:
+        if 0<= away_per <= 10:
             #If the GTT Order Price column in excel is None then the 20 Day High is the GTT Price
             if sh2.cell(i + 1, 6).value is None:
                 gtt_order_price = sh2.cell(i + 1, 3).value
